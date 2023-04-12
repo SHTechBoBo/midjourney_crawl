@@ -1,0 +1,7 @@
+{
+    "toy_1": {
+        "src": "https://storage.googleapis.com/dream-machines-output/aefe86c5-c588-48b9-bbbd-93d3a78b7e47/0_0.png",
+        "model": "diffusion_upsample_v4",
+        "prompt": "<https://s.mj.run/f9qZQAjm0Ks> toy aisle --v 4"
+    }
+}

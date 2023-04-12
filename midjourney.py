@@ -46,10 +46,10 @@ cookie = "imageSize=medium; imageLayout_2=hover; getImageAspect=2; fullWidth=fal
          "ZuAtJrbmIeCDNZAx11tnOLpoRxw9PP1Z3aJH6xD4Vecw-oJIV_rVsg-Ma1mXforKxWleybcGL6lC0uWLKYe7LMXezBW8kvxikK" \
          "-EPIVrHPNJe20N6ufRQN8.eofMEsUhTTzxCCOOm2ZpkQ; _ga_Q0DQ5L7K0D=GS1.1.1681269111.1.1.1681270536.0.0.0 "
 
-# proxies = {
-#     'http': 'http://127.0.0.1:7890',
-#     'https': 'http://127.0.0.1:7890',
-# }
+proxies = {
+    'http': 'http://127.0.0.1:7890',
+    'https': 'http://127.0.0.1:7890',
+}
 
 
 def get_header(keyword: str):
@@ -82,50 +82,46 @@ def download_request(pic_url: str, keyword: str):
 def category_search(key: str, num: int):
     infos = get_request(key).json()
 
-    # 创建一个临时文件夹
-    with tempfile.TemporaryDirectory() as temp_dir:
-        print(temp_dir)
-        all_data = {}
-        i = 1
-        for info in infos:
-            if i > num:
-                break
-            try:
-                src = info['image_paths'][0]
-                prompt = info['full_command']
-                model = info['_job_type']
-                all_data[f"{key}_{i}"] = {"src": src, "model": model, "prompt": prompt}
-                i += 1
-            except KeyError:
-                continue
+    # 创建一个文件夹
+    folder_name = f"{key}_images"
+    os.makedirs(folder_name, exist_ok=True)
 
-        # 在临时文件夹中创建一个 JSON 文件
-        json_path = os.path.join(temp_dir, f"{key}.json")
-        with open(json_path, "w", encoding="utf-8") as out_file:
-            json.dump(all_data, out_file, indent=4, ensure_ascii=False)
+    all_data = {}
+    i = 1
+    for info in infos:
+        if i > num:
+            break
+        try:
+            src = info['image_paths'][0]
+            prompt = info['full_command']
+            model = info['_job_type']
+            all_data[f"{key}_{i}"] = {"src": src, "model": model, "prompt": prompt}
+            i += 1
+        except KeyError:
+            continue
 
-        # 下载图片并将其保存到临时文件夹
-        for name in all_data:
-            response = download_request(all_data[name]['src'], key)
-            img_path = os.path.join(temp_dir, f"{name}.png")
-            with open(img_path, "wb") as out_file:
-                out_file.write(response.content)
-            print(f"{name}.png Success!")
+    # 在文件夹中创建一个 JSON 文件
+    json_path = os.path.join(folder_name, f"{key}.json")
+    with open(json_path, "w", encoding="utf-8") as out_file:
+        json.dump(all_data, out_file, indent=4, ensure_ascii=False)
 
-            # 压缩临时文件夹中的文件
-        zip_file_path = os.path.join(temp_dir, f"{key}.zip")
-        with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
-            for root, _, files in os.walk(temp_dir):
-                for file in files:
-                    if not file.endswith('.zip'):
-                        zip_file.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), temp_dir))
+    # 下载图片并将其保存到文件夹
+    for name in all_data:
+        response = download_request(all_data[name]['src'], key)
+        img_path = os.path.join(folder_name, f"{name}.png")
+        with open(img_path, "wb") as out_file:
+            out_file.write(response.content)
+        print(f"{name}.png Success!")
 
-        # 将 ZIP 文件移动到桌面
-        desktop = os.path.expanduser("~/Desktop")
-        desktop_zip_file_path = os.path.join(desktop, f"{key}.zip")
-        shutil.move(zip_file_path, desktop_zip_file_path)
-        print(f"ZIP file created at: {desktop_zip_file_path}")
-        return desktop_zip_file_path
+    # 压缩文件夹中的文件
+    zip_file_path = os.path.join(folder_name, f"{key}.zip")
+    with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+        for root, _, files in os.walk(folder_name):
+            for file in files:
+                if not file.endswith('.zip'):
+                    zip_file.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), folder_name))
+
+    return zip_file_path
 
 
 if __name__ == '__main__':
