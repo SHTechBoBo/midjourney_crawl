@@ -23,15 +23,3 @@ class ImageDownloader:
             out_file.write(response.content)
         # 打印成功消息
         print(f"{self.name} Download Success (Path: {os.path.abspath(self.path)})")
-
-
-if __name__ == '__main__':
-    proxies = {
-        'http': 'http://127.0.0.1:7890',
-        'https': 'http://127.0.0.1:7890',
-    }
-    re1 = Requester(proxy=proxies)
-    im1 = ImageDownloader(
-        "https://storage.googleapis.com/dream-machines-output/aefe86c5-c588-48b9-bbbd-93d3a78b7e47/0_0.png", "apple",
-        "D:\Tiamat\midjourney_crawl", re1)
-    im1.download()
